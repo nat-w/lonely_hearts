@@ -1,59 +1,50 @@
-CELL_SIZE = 16
-SCALE_FACTOR = 5
+function makeLevel(width, height)
+    local level = {}
+    for y = 1, height do
+        table.insert(level, {})
+        for x = 1, width do
+            -- square is wall
+            if y == 1 or y == height or x == 1 or x == width then
+                table.insert(level[y], math.random(1, 2))
+
+            -- square is grass
+            else
+                table.insert(level[y], math.random(3, 6))
+            end
+        end
+    end
+    return level
+end
 
 function love.load()
-    -- load tiles
+    -- load sprites
     tileset = love.graphics.newImage("love_tiles.png")
-    local image_width = image:getWidth()
-    local image_height = image:getHeight()
+    local image_width = tileset:getWidth()
+    local image_height = tileset:getHeight()
 
+    cellSize = 16
+
+    -- separate tileset into individual tiles
     quads = {}
 
-    for i = 0, 2 do
-        for j = 0, 1 do
-            table.insert(quads, love.graphics.newQuad(1 + j * (width + 2), 1 + i * (height + 2), width, height, image_width, image_height))
+    for y = 0, 2 do
+        for x = 0, 1 do
+            table.insert(quads, love.graphics.newQuad(x * cellSize, y * cellSize, cellSize, cellSize, image_width, image_height))
         end
     end
 
     love.graphics.setBackgroundColor(1, 1, .75)
 
-    blue = '@'
-    pink = '&'
-    wall = '#'
-    empty = ' '
+    blueX = 2
+    blueY = 2
+    pinkX = 6
+    pinkY = 6
 
-    level = {
-        {'#', '#', '#', '#', '#', '#', '#', '#'},
-        {'#', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-        {'#', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-        {'#', '@', ' ', ' ', ' ', ' ', '&', '#'},
-        {'#', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-        {'#', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
-        {'#', '#', '#', '#', '#', '#', '#', '#'}
-    }
-
+    level = makeLevel(8, 8)
 end
 
 function love.keypressed(key)
     if key == 'up' or key == 'down' or key == 'left' or key == 'right' then
-        -- get both players positions
-        local blueX
-        local blueY
-        local pinkX
-        local pinkY
-
-        for y, row in ipairs(level) do
-            for x, cell in ipairs(row) do
-                if cell == blue then
-                    blueX = x
-                    blueY = y
-                elseif cell == pink then
-                    pinkX = x
-                    pinkY = y
-                end
-            end
-        end
-
         -- find next position based on key press
         local dx = 0
         local dy = 0
@@ -67,17 +58,17 @@ function love.keypressed(key)
             dy = 1
         end
 
-        -- check if space clear then move
         local blue_next = level[blueY + dy][blueX + dx]
         local pink_next = level[pinkY - dy][pinkX - dx]
 
-        if blue_next == empty then
-            level[blueY][blueX] = empty
-            level[blueY + dy][blueX + dx] = blue
+        -- check if space clear then move
+        if (blue_next ~= pinkX or blue_next ~= pinkY) and blue_next ~= 1 and blue_next ~= 2 then
+            blueX = blueX + dx
+            blueY = blueY + dy
         end
-        if pink_next == empty then
-            level[pinkY][pinkX] = empty
-            level[pinkY - dy][pinkX - dx] = pink
+        if (pink_next ~= blueX or pink_next ~= blueY) and pink_next ~= 1 and pink_next ~= 2 then
+            pinkX = pinkX - dx
+            pinkY = pinkY - dy
         end
     end
 end
@@ -85,19 +76,17 @@ end
 function love.draw()
     for y, row in ipairs(level) do
         for x, cell in ipairs(row) do
-            local cell_size = (CELL_SIZE - 1) * SCALE_FACTOR
-
-            local colors = {
-                [blue] = {.61, .9, 1},
-                [pink] = {1, .58, .82},
-                [empty] = {2, 3, 4, 5},
-                [wall] = {0, 1}
-            }
-
-            love.graphics.setColor(colors[cell])
-            love.graphics.rectangle('fill', (x - 1) * cellSize, (y - 1) * cellSize, cellSize, cellSize)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.print(level[y][x], (x - 1) * cellSize, (y - 1) * cellSize)
+            if x == blueX and y == blueY then
+                love.graphics.setColor({.61, .9, 1})
+                love.graphics.rectangle('fill', x * cellSize, y * cellSize, cellSize, cellSize)
+                love.graphics.setColor(1, 1, 1)
+            elseif x == pinkX and y == pinkY then
+                love.graphics.setColor({1, .58, .82})
+                love.graphics.rectangle('fill', x * cellSize, y * cellSize, cellSize, cellSize)
+                love.graphics.setColor(1, 1, 1)
+            else
+                love.graphics.draw(tileset, quads[cell], x * cellSize, y * cellSize)
+            end
         end
     end
 end
