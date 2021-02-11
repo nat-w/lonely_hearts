@@ -1,4 +1,14 @@
-function makeLevel(width, height)
+-- constants
+-- define the tile size
+CELLSIZE = 16
+-- sprites must be exported at the same scale as defined here
+SCALE = 1
+-- size of the width and length of the level
+LEVELSIZE = 10
+-- how many obstacles to add
+OBSTACLES = 0
+
+function makeLevel(width, height, obstacles)
     local level = {}
     for y = 1, height do
         table.insert(level, {})
@@ -19,28 +29,31 @@ end
 function love.load()
     -- load sprites
     tileset = love.graphics.newImage("love_tiles.png")
-    local image_width = tileset:getWidth()
-    local image_height = tileset:getHeight()
+    pinkSprite = love.graphics.newImage("pink.png")
+    blueSprite = love.graphics.newImage("blue.png")
+    -- winAnim = love.graphics.newImage("win.png")
 
-    cellSize = 16
+    -- set the cell size based on constants
+    cellSize = CELLSIZE * SCALE
 
     -- separate tileset into individual tiles
     quads = {}
-
     for y = 0, 2 do
         for x = 0, 1 do
-            table.insert(quads, love.graphics.newQuad(x * cellSize, y * cellSize, cellSize, cellSize, image_width, image_height))
+            table.insert(quads,love.graphics.newQuad(x * cellSize, y * cellSize, cellSize, cellSize, tileset:getWidth(), tileset:getHeight()))
         end
     end
 
     love.graphics.setBackgroundColor(1, 1, .75)
 
+    -- set the starting positions of the players
     blueX = 2
     blueY = 2
-    pinkX = 6
-    pinkY = 6
+    pinkX = 8
+    pinkY = 8
 
-    level = makeLevel(8, 8)
+    -- make the level
+    level = makeLevel(LEVELSIZE, LEVELSIZE, OBSTACLES)
 end
 
 function love.keypressed(key)
@@ -58,15 +71,15 @@ function love.keypressed(key)
             dy = 1
         end
 
-        local blue_next = level[blueY + dy][blueX + dx]
-        local pink_next = level[pinkY - dy][pinkX - dx]
+        local blueNext = level[blueY + dy][blueX + dx]
+        local pinkNext = level[pinkY - dy][pinkX - dx]
 
         -- check if space clear then move
-        if (blue_next ~= pinkX or blue_next ~= pinkY) and blue_next ~= 1 and blue_next ~= 2 then
+        if (blueNext ~= pinkX or blueNext ~= pinkY) and blueNext ~= 1 and blueNext ~= 2 then
             blueX = blueX + dx
             blueY = blueY + dy
         end
-        if (pink_next ~= blueX or pink_next ~= blueY) and pink_next ~= 1 and pink_next ~= 2 then
+        if (pinkNext ~= blueX or pinkNext ~= blueY) and pinkNext ~= 1 and pinkNext ~= 2 then
             pinkX = pinkX - dx
             pinkY = pinkY - dy
         end
@@ -76,16 +89,19 @@ end
 function love.draw()
     for y, row in ipairs(level) do
         for x, cell in ipairs(row) do
+            -- draw map tile
+            love.graphics.draw(tileset, quads[cell], x * cellSize, y * cellSize)
+
+            -- draw player
+            -- y - 2 because sprites are 18 pixels tall, not 16
             if x == blueX and y == blueY then
-                love.graphics.setColor({.61, .9, 1})
-                love.graphics.rectangle('fill', x * cellSize, y * cellSize, cellSize, cellSize)
-                love.graphics.setColor(1, 1, 1)
+                -- flip sprite if past middle
+                if blueX > then
+                else
+                    love.graphics.draw(blueSprite, x * cellSize, y * cellSize -2)
+                end
             elseif x == pinkX and y == pinkY then
-                love.graphics.setColor({1, .58, .82})
-                love.graphics.rectangle('fill', x * cellSize, y * cellSize, cellSize, cellSize)
-                love.graphics.setColor(1, 1, 1)
-            else
-                love.graphics.draw(tileset, quads[cell], x * cellSize, y * cellSize)
+                love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2)
             end
         end
     end
