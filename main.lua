@@ -83,11 +83,11 @@ function love.load()
     math.randomseed(os.time()) 
 
     -- size of the width and length of the level
-    levelWidth = math.random(7, 13)
-    levelHeight = math.random(7, 13)
+    levelWidth = math.random(9, 13)
+    levelHeight = math.random(9, 13)
 
     -- how many obstacles to add
-    obstacles = math.random(3, 6)
+    obstacles = math.random(2, 5)
 
     -- set the starting positions of the players
     midX = math.floor(levelWidth / 2) - 1
@@ -128,7 +128,7 @@ function love.keypressed(key)
         local blueNext = level[blueY + dy][blueX + dx]
         local pinkNext = level[pinkY - dy][pinkX - dx]
 
-        -- check if space clear then move
+        -- check if space clear, then move
         if not win and (blueX + dx ~= pinkX or blueY + dy ~= pinkY) and blueNext ~= 1 and blueNext ~= 2 then
             blueX = blueX + dx
             blueY = blueY + dy
@@ -137,15 +137,15 @@ function love.keypressed(key)
             pinkX = pinkX - dx
             pinkY = pinkY - dy
         end
+
+        -- check if won after moving
+        if (blueY == pinkY) and (blueX + 1 == pinkX or blueX - 1 == pinkX) then
+            win = true
+        end
     end
 end
 
 function love.update(dt)
-    -- check if won
-    if (blueY == pinkY) and (blueX + 1 == pinkX or blueX - 1 == pinkX) then
-        win = true
-    end
-
     if win then
         winAnim.currentTime = winAnim.currentTime + (dt * ANIMSPEED)
         if winAnim.currentTime >= winAnim.duration then
@@ -164,21 +164,26 @@ function love.draw()
 
     -- draw hug anim if game over
     if win then
-        local animX = blueX < pinkX and blueX or pinkX
+        local animX = blueX
         local animY = blueY
         local spriteNum = math.floor(winAnim.currentTime / winAnim.duration * #winAnim.quads) + 1
-        love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], animX * (CELLSIZE * SCALE), animY * (CELLSIZE * SCALE) -2)
+        
+        if blueX - 1 == pinkX then
+            love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], (animX + 1) * (CELLSIZE * SCALE), animY * (CELLSIZE * SCALE) -2, 0, -1, 1)
+        else
+            love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], animX * (CELLSIZE * SCALE), animY * (CELLSIZE * SCALE) -2)
+        end
     -- draw players
     else
         -- flip player if they pass midpoint
-        if blueX > levelWidth / 2 then
-            love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2, 0, -1, 1)
+        if blueX > pinkX then
+            love.graphics.draw(blueSprite, (blueX + 1) * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2, 0, -1, 1)
         else
             love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2)
         end
 
-        if pinkX < levelWidth / 2 then
-            love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2, 0, -1, 1)
+        if blueX > pinkX then
+            love.graphics.draw(pinkSprite, (pinkX + 1) * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2, 0, -1, 1)
         else
             love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2)
         end
