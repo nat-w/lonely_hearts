@@ -1,18 +1,20 @@
 -- constants
 -- define the tile size
 CELLSIZE = 16
--- sprites must be exported at the same scale as defined here
-SCALE = 1
+-- sprites must be exported with their original name and scale as defined below
+-- and put in a folder named 'scale'x ie. 1x, 5x etc.
+SCALE = 3
 -- size of the width and length of the level
 LEVELSIZE = 10
 -- how many obstacles to add
 OBSTACLES = 0
+ANIMSPEED = 1
 
 function makeTiles(tileset, cols, rows)
     quads = {}
     for y = 0, cols do
         for x = 0, rows do
-            table.insert(quads,love.graphics.newQuad(x * cellSize, y * cellSize, cellSize, cellSize, tileset:getWidth(), tileset:getHeight()))
+            table.insert(quads,love.graphics.newQuad(x * CELLSIZE * SCALE, y * CELLSIZE * SCALE, CELLSIZE * SCALE, CELLSIZE * SCALE, tileset:getWidth(), tileset:getHeight()))
         end
     end
     return quads
@@ -53,14 +55,11 @@ end
 
 function love.load()
     -- load sprites
-    tileset = love.graphics.newImage("love_tiles.png")
-    pinkSprite = love.graphics.newImage("pink.png")
-    blueSprite = love.graphics.newImage("blue.png")
-    winAnim = makeAnim(love.graphics.newImage("win.png"), CELLSIZE * 2, CELLSIZE + 2, 4)
-
-    -- set the cell size based on constants
-    cellSize = CELLSIZE * SCALE
-
+    tileset = love.graphics.newImage(tostring(SCALE) .. "x/" .. "loveTiles.png")
+    pinkSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "pink.png")
+    blueSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "blue.png")
+    winAnim = makeAnim(love.graphics.newImage(tostring(SCALE) .. "x/" .. "win.png"), CELLSIZE * 2, CELLSIZE + 2, 4)
+    
     -- separate tileset into individual tiles
     tiles = makeTiles(tileset, 2, 1)
 
@@ -98,11 +97,11 @@ function love.keypressed(key)
         local pinkNext = level[pinkY - dy][pinkX - dx]
 
         -- check if space clear then move
-        if (blueX + dx ~= pinkX or blueY + dy ~= pinkY) and blueNext ~= 1 and blueNext ~= 2 then
+        if not win and (blueX + dx ~= pinkX or blueY + dy ~= pinkY) and blueNext ~= 1 and blueNext ~= 2 then
             blueX = blueX + dx
             blueY = blueY + dy
         end
-        if (pinkX - dx ~= blueX or pinkY - dy ~= blueY) and pinkNext ~= 1 and pinkNext ~= 2 then
+        if not win and (pinkX - dx ~= blueX or pinkY - dy ~= blueY) and pinkNext ~= 1 and pinkNext ~= 2 then
             pinkX = pinkX - dx
             pinkY = pinkY - dy
         end
@@ -116,41 +115,39 @@ function love.update(dt)
     end
 
     if win then
-        winAnim.currentTime = winAnim.currentTime + dt
+        winAnim.currentTime = winAnim.currentTime + (dt * ANIMSPEED)
         if winAnim.currentTime >= winAnim.duration then
-            winAnim.currentTime = winAnim.currentTime - winAnim.duration
+            winAnim.currentTime = 3
         end
     end
 end
 
 function love.draw()
+    -- draw map
     for y, row in ipairs(level) do
         for x, cell in ipairs(row) do
-            -- draw map tile
-            love.graphics.draw(tileset, tiles[cell], x * cellSize, y * cellSize)
-
-            -- draw player
-            -- y - 2 because sprites are 18 pixels tall, not 16
-            if x == blueX and y == blueY then
-                -- flip sprite if past middle
-                if blueX > LEVELSIZE / 2 then
-                    love.graphics.draw(blueSprite, x * cellSize, y * cellSize -2, 0, -1, 1)
-                else
-                    love.graphics.draw(blueSprite, x * cellSize, y * cellSize -2)
-                end
-            elseif x == pinkX and y == pinkY then
-                if pinkX < LEVELSIZE / 2 then
-                    love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2, 0, -1, 1)
-                else
-                    love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2)
-                end
-            end
+            love.graphics.draw(tileset, tiles[cell], x * (CELLSIZE * SCALE), y * (CELLSIZE * SCALE))
         end
     end
 
-    -- anim test
+    -- draw hug anim if game over
     if win then
+        local animX = blueX < pinkX and blueX or pinkX
+        local animY = blueY
         local spriteNum = math.floor(winAnim.currentTime / winAnim.duration * #winAnim.quads) + 1
-        love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], 0, 0)
+        love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], animX * (CELLSIZE * SCALE), animY * (CELLSIZE * SCALE) -2)
+    -- draw players
+    else
+        if blueX > LEVELSIZE / 2 then
+            love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2, 0, -1, 1)
+        else
+            love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2)
+        end
+
+        if pinkX < LEVELSIZE / 2 then
+            love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2, 0, -1, 1)
+        else
+            love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2)
+        end
     end
 end
