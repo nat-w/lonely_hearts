@@ -79,6 +79,9 @@ function love.load()
         startGame = false
     end
 
+    -- reset random seed
+    math.randomseed(os.time()) 
+
     -- size of the width and length of the level
     levelWidth = math.random(7, 13)
     levelHeight = math.random(7, 13)
@@ -96,23 +99,29 @@ function love.load()
 
     -- set up win trigger
     win = false
+    -- reset win animation
+    winAnim.currentTime = 0
 
     -- make the level
     level = makeLevel(levelWidth, levelHeight, obstacles)
 end
 
 function love.keypressed(key)
-    if key == 'up' or key == 'down' or key == 'left' or key == 'right' then
+    if key == "r" then
+        love.load()
+    end
+
+    if key == "up" or key == "down" or key == "left" or key == "right" then
         -- find next position based on key press
         local dx = 0
         local dy = 0
-        if key == 'left' then
+        if key == "left" then
             dx = -1
-        elseif key == 'right' then
+        elseif key == "right" then
             dx = 1
-        elseif key == 'up' then
+        elseif key == "up" then
             dy = -1
-        elseif key == 'down' then
+        elseif key == "down" then
             dy = 1
         end
 
