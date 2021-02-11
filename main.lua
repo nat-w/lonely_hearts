@@ -58,7 +58,7 @@ function love.load()
     tileset = love.graphics.newImage(tostring(SCALE) .. "x/" .. "loveTiles.png")
     pinkSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "pink.png")
     blueSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "blue.png")
-    winAnim = makeAnim(love.graphics.newImage(tostring(SCALE) .. "x/" .. "win.png"), CELLSIZE * 2, CELLSIZE + 2, 4)
+    winAnim = makeAnim(love.graphics.newImage(tostring(SCALE) .. "x/" .. "win.png"), (CELLSIZE * SCALE) * 2,  (CELLSIZE * SCALE) + (2 * SCALE), 4)
     
     -- separate tileset into individual tiles
     tiles = makeTiles(tileset, 2, 1)
