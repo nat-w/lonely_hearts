@@ -5,3 +5,5 @@
 ### How to play:
 Use the arrow keys to move blue, and pink will move in the opposite.
 Get blue and pink to face each other to win.
+
+<img src="https://github.com/nat-w/lonely_hearts/blob/master/banner.png">
