@@ -4,12 +4,12 @@ CELLSIZE = 16
 -- sprites must be exported with their original name and scale as defined below
 -- and put in a folder named 'scale'x ie. 1x, 5x etc.
 SCALE = 3
--- size of the width and length of the level
-LEVELSIZE = 10
--- how many obstacles to add
-OBSTACLES = 0
-ANIMSPEED = 1
+ANIMSPEED = 5
+-- singleton for game start, so that assets are only loaded once
+startGame = true
 
+-- makes a list of tiles given a tileset and its columns and rows
+-- leave no padding or borders in the tileset
 function makeTiles(tileset, cols, rows)
     quads = {}
     for y = 0, cols do
@@ -20,6 +20,8 @@ function makeTiles(tileset, cols, rows)
     return quads
 end
 
+-- takes a spritesheet and creates an animation
+-- leave no padding or borders in the spritesheet
 function makeAnim(image, width, height, frames)
     local animation = {}
     animation.spriteSheet = image;
@@ -35,6 +37,7 @@ function makeAnim(image, width, height, frames)
     return animation
 end
 
+-- make a square level surrounded by walls with random obstacles
 function makeLevel(width, height, obstacles)
     local level = {}
     for y = 1, height do
@@ -43,7 +46,10 @@ function makeLevel(width, height, obstacles)
             -- square is wall
             if y == 1 or y == height or x == 1 or x == width then
                 table.insert(level[y], math.random(1, 2))
-
+            -- add obstacle
+            elseif obstacles > 0  and math.random(1, width) == 1 then
+                table.insert(level[y], math.random(1, 2))
+                obstacles = obstacles - 1
             -- square is grass
             else
                 table.insert(level[y], math.random(3, 6))
@@ -53,29 +59,46 @@ function makeLevel(width, height, obstacles)
     return level
 end
 
-function love.load()
-    -- load sprites
+function loadGame()
+    -- load sprites and animations
     tileset = love.graphics.newImage(tostring(SCALE) .. "x/" .. "loveTiles.png")
     pinkSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "pink.png")
     blueSprite = love.graphics.newImage(tostring(SCALE) .. "x/" .. "blue.png")
     winAnim = makeAnim(love.graphics.newImage(tostring(SCALE) .. "x/" .. "win.png"), (CELLSIZE * SCALE) * 2,  (CELLSIZE * SCALE) + (2 * SCALE), 4)
-    
+
     -- separate tileset into individual tiles
     tiles = makeTiles(tileset, 2, 1)
 
     love.graphics.setBackgroundColor(.75, 1, 1)
+end
+
+function love.load()
+    -- load assets if this is first level
+    if startGame then
+        loadGame()
+        startGame = false
+    end
+
+    -- size of the width and length of the level
+    levelWidth = math.random(7, 13)
+    levelHeight = math.random(7, 13)
+
+    -- how many obstacles to add
+    obstacles = math.random(3, 6)
 
     -- set the starting positions of the players
-    blueX = 2
-    blueY = 2
-    pinkX = 8
-    pinkY = 8
+    midX = math.floor(levelWidth / 2) - 1
+    midY = math.floor(levelHeight / 2) - 1
+    blueX = math.random(2, midX)
+    blueY = math.random(2, midY)
+    pinkX = math.random(midX, levelWidth - 1)
+    pinkY = math.random(midY, levelHeight - 1)
 
     -- set up win trigger
     win = false
 
     -- make the level
-    level = makeLevel(LEVELSIZE, LEVELSIZE, OBSTACLES)
+    level = makeLevel(levelWidth, levelHeight, obstacles)
 end
 
 function love.keypressed(key)
@@ -138,13 +161,14 @@ function love.draw()
         love.graphics.draw(winAnim.spriteSheet, winAnim.quads[spriteNum], animX * (CELLSIZE * SCALE), animY * (CELLSIZE * SCALE) -2)
     -- draw players
     else
-        if blueX > LEVELSIZE / 2 then
+        -- flip player if they pass midpoint
+        if blueX > levelWidth / 2 then
             love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2, 0, -1, 1)
         else
             love.graphics.draw(blueSprite, blueX * (CELLSIZE * SCALE), blueY * (CELLSIZE * SCALE) -2)
         end
 
-        if pinkX < LEVELSIZE / 2 then
+        if pinkX < levelWidth / 2 then
             love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2, 0, -1, 1)
         else
             love.graphics.draw(pinkSprite, pinkX * (CELLSIZE * SCALE), pinkY * (CELLSIZE * SCALE) -2)
