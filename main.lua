@@ -96,12 +96,17 @@ function love.draw()
             -- y - 2 because sprites are 18 pixels tall, not 16
             if x == blueX and y == blueY then
                 -- flip sprite if past middle
-                if blueX > then
+                if blueX > LEVELSIZE / 2 then
+                    love.graphics.draw(blueSprite, x * cellSize, y * cellSize -2, 0, -1, 1)
                 else
                     love.graphics.draw(blueSprite, x * cellSize, y * cellSize -2)
                 end
             elseif x == pinkX and y == pinkY then
-                love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2)
+                if pinkX < LEVELSIZE / 2 then
+                    love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2, 0, -1, 1)
+                else
+                    love.graphics.draw(pinkSprite, x * cellSize, y * cellSize -2)
+                end
             end
         end
     end
